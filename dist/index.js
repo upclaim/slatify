@@ -28016,73 +28016,49 @@ class Block {
         return eventName === 'pull_request';
     }
     /**
-     * Get slack blocks UI
-     * @returns {MrkdwnElement[]} blocks
-     */
-    get baseFields() {
-        const { sha, eventName, workflow, ref } = this.context;
-        const { owner, repo } = this.context.repo;
-        const { number } = this.context.issue;
-        const repoUrl = `https://github.com/${owner}/${repo}`;
-        let actionUrl = repoUrl;
-        let eventUrl = eventName;
-        if (this.isPullRequest) {
-            eventUrl = `<${repoUrl}/pull/${number}|${eventName}>`;
-            actionUrl += `/pull/${number}/checks`;
-        }
-        else {
-            actionUrl += `/commit/${sha}/checks`;
-        }
-        const fields = [
-            {
-                type: 'mrkdwn',
-                text: `*repository*\n<${repoUrl}|${owner}/${repo}>`
-            },
-            {
-                type: 'mrkdwn',
-                text: `*ref*\n${ref}`
-            },
-            {
-                type: 'mrkdwn',
-                text: `*event name*\n${eventUrl}`
-            },
-            {
-                type: 'mrkdwn',
-                text: `*workflow*\n<${actionUrl}|${workflow}>`
-            }
-        ];
-        return fields;
-    }
-    /**
      * Get MrkdwnElement fields including git commit data
      * @param {string} token
      * @returns {Promise<MrkdwnElement[]>}
      */
     getCommitFields(token) {
         return __awaiter(this, void 0, void 0, function* () {
+            const { sha, eventName, workflow } = this.context;
             const { owner, repo } = this.context.repo;
-            const head_ref = process.env.GITHUB_HEAD_REF;
+            const { number } = this.context.issue;
+            const repoUrl = `https://github.com/${owner}/${repo}`;
+            let actionUrl = repoUrl;
+            let eventUrl = eventName;
+            const head_ref = process.env.GITHUB_REF;
             const ref = this.isPullRequest
                 ? head_ref.replace(/refs\/heads\//, '')
                 : this.context.sha;
             const client = new rest_1.Octokit({ auth: token });
             const { data: commit } = yield client.repos.getCommit({ owner, repo, ref });
+            if (this.isPullRequest) {
+                eventUrl = `<${repoUrl}/pull/${number}|Pull Request>`;
+                actionUrl += `/pull/${number}/checks`;
+            }
+            else {
+                actionUrl += `/commit/${sha}/checks`;
+            }
             const commitMsg = commit.commit.message.split('\n')[0];
             const commitUrl = commit.html_url;
+            const authorName = commit.author.login;
+            const authorUrl = commit.author.html_url;
             const fields = [
                 {
                     type: 'mrkdwn',
-                    text: `*commit*\n<${commitUrl}|${commitMsg}>`
+                    text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>`
+                },
+                {
+                    type: 'mrkdwn',
+                    text: `*Code:*\n<${commitUrl}|${commitMsg}>`
+                },
+                {
+                    type: 'mrkdwn',
+                    text: `*Build:*\n<${actionUrl}|${workflow}>`
                 }
             ];
-            if (commit.author) {
-                const authorName = commit.author.login;
-                const authorUrl = commit.author.html_url;
-                fields.push({
-                    type: 'mrkdwn',
-                    text: `*author*\n<${authorUrl}|${authorName}>`
-                });
-            }
             return fields;
         });
     }
@@ -28115,7 +28091,7 @@ class Slack {
                 : tmpText;
             let baseBlock = {
                 type: 'section',
-                fields: slackBlockUI.baseFields
+                fields: []
             };
             if (commitFlag && token) {
                 const commitFields = yield slackBlockUI.getCommitFields(token);
