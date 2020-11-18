@@ -9,7 +9,8 @@ async function run() {
     const status: string = validateStatus(
       core.getInput('type', {required: true}).toLowerCase()
     );
-    const jobName: string = core.getInput('job_name', {required: true});
+    const successMessage: string = core.getInput('success_message', {required: false});
+    const errorMessage: string = core.getInput('error_message', {required: false});
     const url: string = process.env.SLACK_WEBHOOK || core.getInput('url');
     let mention: string = core.getInput('mention');
     let mentionCondition: string = core.getInput('mention_if').toLowerCase();
@@ -39,7 +40,8 @@ async function run() {
 
     const slack = new Slack();
     const payload = await slack.generatePayload(
-      jobName,
+      successMessage,
+      errorMessage,
       status,
       mention,
       mentionCondition,

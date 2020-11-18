@@ -27910,7 +27910,8 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const status = utils_1.validateStatus(core.getInput('type', { required: true }).toLowerCase());
-            const jobName = core.getInput('job_name', { required: true });
+            const successMessage = core.getInput('success_message', { required: false });
+            const errorMessage = core.getInput('error_message', { required: false });
             const url = process.env.SLACK_WEBHOOK || core.getInput('url');
             let mention = core.getInput('mention');
             let mentionCondition = core.getInput('mention_if').toLowerCase();
@@ -27936,7 +27937,7 @@ function run() {
       `);
             }
             const slack = new slack_1.Slack();
-            const payload = yield slack.generatePayload(jobName, status, mention, mentionCondition, commitFlag, token);
+            const payload = yield slack.generatePayload(successMessage, errorMessage, status, mention, mentionCondition, commitFlag, token);
             console.info(`Generated payload for slack: ${JSON.stringify(payload)}`);
             yield slack.notify(url, slackOptions, payload);
             console.info('Sent message to Slack');
@@ -28048,15 +28049,7 @@ class Block {
             const fields = [
                 {
                     type: 'mrkdwn',
-                    text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>`
-                },
-                {
-                    type: 'mrkdwn',
-                    text: `*Code:*\n<${commitUrl}|${commitMsg}>`
-                },
-                {
-                    type: 'mrkdwn',
-                    text: `*Build:*\n<${actionUrl}|${workflow}>`
+                    text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>\n*Build:*<${actionUrl}|${workflow}>`
                 }
             ];
             return fields;
@@ -28081,14 +28074,18 @@ class Slack {
      * @param {string} mentionCondition
      * @returns {IncomingWebhookSendArguments}
      */
-    generatePayload(jobName, status, mention, mentionCondition, commitFlag, token) {
+    generatePayload(successMessage, errorMessage, status, mention, mentionCondition, commitFlag, token) {
         return __awaiter(this, void 0, void 0, function* () {
             const slackBlockUI = new Block();
             const notificationType = slackBlockUI[status];
-            const tmpText = `${jobName} ${notificationType.result}`;
+            let messageToDisplay = 'Cancelled build';
+            if (status === 'success')
+                messageToDisplay = successMessage;
+            else if (status === 'failure')
+                messageToDisplay = errorMessage;
             const text = mention && this.isMention(mentionCondition, status)
-                ? `<!${mention}> ${tmpText}`
-                : tmpText;
+                ? `<!${mention}> ${messageToDisplay}`
+                : messageToDisplay;
             let baseBlock = {
                 type: 'section',
                 fields: []

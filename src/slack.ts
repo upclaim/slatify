@@ -80,15 +80,7 @@ class Block {
     const fields: MrkdwnElement[] = [
       {
         type: 'mrkdwn',
-        text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>`
-      },
-      {
-        type: 'mrkdwn',
-        text: `*Code:*\n<${commitUrl}|${commitMsg}>`
-      },
-      {
-        type: 'mrkdwn',
-        text: `*Build:*\n<${actionUrl}|${workflow}>`
+        text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>\n*Build:*<${actionUrl}|${workflow}>`
       }
     ];
 
@@ -116,7 +108,8 @@ export class Slack {
    * @returns {IncomingWebhookSendArguments}
    */
   public async generatePayload(
-    jobName: string,
+    successMessage: string,
+    errorMessage: string,
     status: string,
     mention: string,
     mentionCondition: string,
@@ -125,11 +118,15 @@ export class Slack {
   ): Promise<IncomingWebhookSendArguments> {
     const slackBlockUI = new Block();
     const notificationType: Accessory = slackBlockUI[status];
-    const tmpText: string = `${jobName} ${notificationType.result}`;
+
+    let messageToDisplay = 'Cancelled build'
+    if (status === 'success') messageToDisplay = successMessage
+    else if (status === 'failure') messageToDisplay = errorMessage
+
     const text =
       mention && this.isMention(mentionCondition, status)
-        ? `<!${mention}> ${tmpText}`
-        : tmpText;
+        ? `<!${mention}> ${messageToDisplay}`
+        : messageToDisplay;
     let baseBlock = {
       type: 'section',
       fields: []
