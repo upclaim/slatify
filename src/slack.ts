@@ -80,7 +80,7 @@ class Block {
     const fields: MrkdwnElement[] = [
       {
         type: 'mrkdwn',
-        text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>\n*Build:*<${actionUrl}|${workflow}>`
+        text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>\n*Build:* <${actionUrl}|${workflow}>`
       }
     ];
 
@@ -128,15 +128,15 @@ export class Slack {
         ? `<!${mention}> ${messageToDisplay}`
         : messageToDisplay;
     let baseBlock = {
-      type: 'section',
-      fields: []
+      type: 'context',
+      elements: []
     };
 
     if (commitFlag && token) {
       const commitFields: MrkdwnElement[] = await slackBlockUI.getCommitFields(
         token
       );
-      Array.prototype.push.apply(baseBlock.fields, commitFields);
+      Array.prototype.push.apply(baseBlock.elements, commitFields);
     }
 
     const attachments: MessageAttachment = {

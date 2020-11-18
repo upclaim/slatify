@@ -28049,7 +28049,7 @@ class Block {
             const fields = [
                 {
                     type: 'mrkdwn',
-                    text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>\n*Build:*<${actionUrl}|${workflow}>`
+                    text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>\n*Build:* <${actionUrl}|${workflow}>`
                 }
             ];
             return fields;
@@ -28087,12 +28087,12 @@ class Slack {
                 ? `<!${mention}> ${messageToDisplay}`
                 : messageToDisplay;
             let baseBlock = {
-                type: 'section',
-                fields: []
+                type: 'context',
+                elements: []
             };
             if (commitFlag && token) {
                 const commitFields = yield slackBlockUI.getCommitFields(token);
-                Array.prototype.push.apply(baseBlock.fields, commitFields);
+                Array.prototype.push.apply(baseBlock.elements, commitFields);
             }
             const attachments = {
                 color: notificationType.color,
