@@ -28029,7 +28029,7 @@ class Block {
             const repoUrl = `https://github.com/${owner}/${repo}`;
             let actionUrl = repoUrl;
             let eventUrl = eventName;
-            const head_ref = process.env.GITHUB_REF;
+            const head_ref = process.env.GITHUB_HEAD_REF;
             const ref = this.isPullRequest
                 ? head_ref.replace(/refs\/heads\//, '')
                 : this.context.sha;
@@ -28046,13 +28046,13 @@ class Block {
             const commitUrl = commit.html_url;
             const authorName = commit.author.login;
             const authorUrl = commit.author.html_url;
-            const fields = [
-                {
-                    type: 'mrkdwn',
-                    text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>\n*Build:* <${actionUrl}|${workflow}>`
-                }
-            ];
-            return fields;
+            const text = `${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>`
+                .concat(`\n*Build:* <${actionUrl}|${workflow}>`, `\n*Branch:* \`${ref}\``);
+            const textJson = {
+                type: 'mrkdwn',
+                text
+            };
+            return textJson;
         });
     }
 }
@@ -28087,12 +28087,12 @@ class Slack {
                 ? `<!${mention}> ${messageToDisplay}`
                 : messageToDisplay;
             let baseBlock = {
-                type: 'context',
-                elements: []
+                type: 'section',
+                text: {}
             };
             if (commitFlag && token) {
                 const commitFields = yield slackBlockUI.getCommitFields(token);
-                Array.prototype.push.apply(baseBlock.elements, commitFields);
+                baseBlock.text = commitFields;
             }
             const attachments = {
                 color: notificationType.color,

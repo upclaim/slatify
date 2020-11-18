@@ -1,4 +1,4 @@
-# Slatify
+# Slatify - _Fork_ 
 
 ![GitHub Workflow](https://github.com/lazy-actions/slatify/workflows/lint/badge.svg)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/lazy-actions/slatify?color=brightgreen)
@@ -47,7 +47,8 @@ You can customize the following parameters:
 |with parameter|required/optional|default|description|
 |:--:|:--:|:--|:--|
 |type|required|N/A|The result of GitHub Actions job<br>This parameter value must contain the following word:<br>- `success`<br>- `failure`<br>- `cancelled`<br>We recommend using ${{ job.status }}|
-|job_name|required|N/A|Means slack notification title|
+|success_message|required|N/A|Success slack notification title|
+|error_message|required|N/A|Failure slack notification title|
 |url|required|N/A|Slack Incoming Webhooks URL<br>Please specify this key or SLACK_WEBHOOK environment variable<br>※SLACK_WEBHOOK will be deprecated|
 |mention|optional|N/A|Slack message mention|
 |mention_if|optional|N/A|The condition to mention<br>This parameter can contain the following word:<br>- `success`<br>- `failure`<br>- `cancelled`<br>- `always`|
@@ -93,11 +94,13 @@ Please refer to [action.yml](./action.yml) for more details.
 
 ## Slack UI
 
-<img src="./images/slack2.png" alt="Notification Preview" width="90%">
+#### New UI
+<img src="./images/slack.png" alt="Notification Preview" width="90%">
 
 ---
 
-<img src="./images/slack.png" alt="Notification Preview" width="90%">
+#### Original UI
+<img src="./images/slack2.png" alt="Notification Preview" width="90%">
 
 ## LICENSE
 

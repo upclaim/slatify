@@ -48,7 +48,7 @@ class Block {
    * @param {string} token
    * @returns {Promise<MrkdwnElement[]>}
    */
-  public async getCommitFields(token: string): Promise<MrkdwnElement[]> {
+  public async getCommitFields(token: string): Promise<MrkdwnElement> {
     const {sha, eventName, workflow} = this.context;
     const {owner, repo} = this.context.repo;
 
@@ -57,7 +57,7 @@ class Block {
     let actionUrl: string = repoUrl;
     let eventUrl: string = eventName;
 
-    const head_ref: string = process.env.GITHUB_REF as string;
+    const head_ref: string = process.env.GITHUB_HEAD_REF as string;
     const ref: string = this.isPullRequest
       ? head_ref.replace(/refs\/heads\//, '')
       : this.context.sha;
@@ -77,14 +77,18 @@ class Block {
     const authorName: string = commit.author.login;
     const authorUrl: string = commit.author.html_url;
 
-    const fields: MrkdwnElement[] = [
-      {
-        type: 'mrkdwn',
-        text: `New ${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>\n*Build:* <${actionUrl}|${workflow}>`
-      }
-    ];
+    const text = `${eventUrl} by <${authorUrl}|${authorName}> on <${repoUrl}|${owner}/${repo}>`
+      .concat(
+        `\n*Build:* <${actionUrl}|${workflow}>`,
+        `\n*Branch:* \`${ref}\``
+      )
 
-    return fields;
+    const textJson: MrkdwnElement = {
+      type: 'mrkdwn',
+      text
+    };
+
+    return textJson;
   }
 }
 
@@ -128,15 +132,15 @@ export class Slack {
         ? `<!${mention}> ${messageToDisplay}`
         : messageToDisplay;
     let baseBlock = {
-      type: 'context',
-      elements: []
+      type: 'section',
+      text: {}
     };
 
     if (commitFlag && token) {
-      const commitFields: MrkdwnElement[] = await slackBlockUI.getCommitFields(
+      const commitFields: MrkdwnElement = await slackBlockUI.getCommitFields(
         token
       );
-      Array.prototype.push.apply(baseBlock.elements, commitFields);
+      baseBlock.text = commitFields
     }
 
     const attachments: MessageAttachment = {
